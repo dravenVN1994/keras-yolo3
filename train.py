@@ -14,23 +14,23 @@ from yolo3.utils import get_random_data
 
 
 def _main():
-    annotation_path = 'train.txt'
-    log_dir = 'logs/000/'
-    classes_path = 'model_data/voc_classes.txt'
-    anchors_path = 'model_data/yolo_anchors.txt'
+    annotation_path = FLAGS.annotation_path
+    log_dir = FLAGS.log_dir
+    classes_path = FLAGS.classes_path
+    anchors_path = FLAGS.anchors_path
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
 
-    input_shape = (416,416) # multiple of 32, hw
+    input_shape = (416, 416) # multiple of 32, hw
 
-    is_tiny_version = len(anchors)==6 # default setting
+    is_tiny_version = FLAGS.is_tiny
     if is_tiny_version:
         model = create_tiny_model(input_shape, anchors, num_classes,
-            freeze_body=2, weights_path='model_data/tiny_yolo_weights.h5')
+            freeze_body=2, weights_path=FLAGS.weights_path)
     else:
         model = create_model(input_shape, anchors, num_classes,
-            freeze_body=2, weights_path='model_data/yolo_weights.h5') # make sure you know what you freeze
+            freeze_body=2, weights_path=FLAGS.weights_path) # make sure you know what you freeze
 
     logging = TensorBoard(log_dir=log_dir)
     checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
@@ -186,5 +186,37 @@ def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, n
     if n==0 or batch_size<=0: return None
     return data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes)
 
+FLAGS = None
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
+    parser.add_argument(
+        '--annotation_path', type=str,
+        help='path to annotation file, default: ' + 'model_data/yolo_anchors.txt'
+    )
+
+    parser.add_argument(
+        '--log_dir', type=str,
+        help='path to log dir, default: ' + 'logs/000/'
+    )
+
+    parser.add_argument(
+        '--classes_path', type=str,
+        help='path to class definitions, default: ' + 'model_data/voc_classes.txt'
+    )
+
+    parser.add_argument(
+        '--anchors_path', type=str,
+        help='path to anchors file, default: ' + 'model_data/yolo_anchors.txt'
+    )
+    parser.add_argument(
+        '--is_tiny', default=False, action="store_true",
+        help='True for tiny model'
+    )
+    parser.add_argument(
+        '--weights_path', type=str,
+        help='path to initial weights, default: ' + 'model_data/tiny_yolo_weights.h5'
+    )
+    
+    FLAGS = parser.parse_args()
     _main()
