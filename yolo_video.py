@@ -2,18 +2,20 @@ import sys
 import argparse
 from yolo import YOLO, detect_video
 from PIL import Image
+import glob
+import os
 
-def detect_img(yolo):
-    while True:
-        img = input('Input image filename:')
+def detect_img(yolo, input_path, output_path):
+    img_path = glob.glob(os.path.join(input_path, '*'))
+    for path in img_path:
         try:
-            image = Image.open(img)
+            image = Image.open(path)
         except:
-            print('Open Error! Try again!')
+            print("Can't open {}".format(path))
             continue
         else:
             r_image = yolo.detect_image(image)
-            r_image.show()
+            r_image.save(os.path.join(output_path, os.path.basename(path)))
     yolo.close_session()
 
 FLAGS = None
@@ -60,7 +62,17 @@ if __name__ == '__main__':
         "--output", nargs='?', type=str, default="",
         help = "[Optional] Video output path"
     )
-
+    
+    parser.add_argument(
+        "--score", type=float, default=0.3,
+        help = "Confiden threshold"
+    )
+    
+    parser.add_argument(
+        "--iou", type=float, default=0.45,
+        help = "IOU threshold"
+    )
+    
     FLAGS = parser.parse_args()
 
     if FLAGS.image:
