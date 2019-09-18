@@ -6,7 +6,14 @@ import glob
 import os
 
 def detect_img(yolo, input_path, output_path):
-    img_path = glob.glob(os.path.join(input_path, '*'))
+    if os.path.isdir(input_path):
+        print("Detect folder: ", input_path)
+        img_path = glob.glob(os.path.join(input_path, '*'))
+    else:
+        print("Detect file: ", input_path)
+        with open(input_path) as f:
+            labels = f.readlines()
+        img_path = [line.split()[0] for line in labels]
     for path in img_path:
         try:
             image = Image.open(path)
@@ -80,9 +87,7 @@ if __name__ == '__main__':
         Image detection mode, disregard any remaining command line arguments
         """
         print("Image detection mode")
-        if "input" in FLAGS:
-            print(" Ignoring remaining command line arguments: " + FLAGS.input + "," + FLAGS.output)
-        detect_img(YOLO(**vars(FLAGS)))
+        detect_img(YOLO(**vars(FLAGS)), FLAGS.input, FLAGS.output)
     elif "input" in FLAGS:
         detect_video(YOLO(**vars(FLAGS)), FLAGS.input, FLAGS.output)
     else:
