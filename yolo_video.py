@@ -21,6 +21,7 @@ def detect_img(yolo, input_path, output_path):
             print("Can't open {}".format(path))
             continue
         else:
+            print("[*] Image: ", os.path.basename(path))
             r_image = yolo.detect_image(image)
             r_image.save(os.path.join(output_path, os.path.basename(path)))
     yolo.close_session()
